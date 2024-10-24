@@ -1,0 +1,97 @@
+{% load static %}
+<script src="{% static 'js/sweetalert2.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/form.css' %}">
+<link rel="stylesheet" href="{% static 'css/sweetalert2.css' %}">
+<div class="container">
+    {% if score.pk %}
+    <h2>编辑学生成绩</h2>
+    {% else %}
+    <h2>添加学生成绩</h2>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+            {{ field }}
+        </div>
+        {% endfor %}
+        <div class="handleButton">
+            <button type="submit" id="saveButton">保存</button>
+            <button type="button" id="cancelButton" onclick="window.parent.Swal.close();">取消</button>
+        </div>
+    </form>
+</div>
+{% if score.pk %}
+<script>
+    var actionUrl = "{% url 'score_update' score.pk %}";
+</script>
+{% else %}
+<script>
+    var actionUrl = "{% url 'score_create' %}";
+</script>
+{% endif %}
+<script>
+    //提交表单
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        const url = actionUrl;
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();  // 阻止表单的正常提交
+            // 收集表单数据
+            let formData = new FormData(form);
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')  // 确保添加 CSRF 令牌
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error') {
+                        console.log(data)
+                        // 错误处理
+                        let errorMessage = '';
+                        for (const field in data.messages) {
+                            if (data.messages.hasOwnProperty(field)) {
+                                data.messages[field].forEach(error => {
+                                    errorMessage += `<li style="color:red;text-align:left;margin-left: 100px;">${field}: ${error.message}</li>`;
+                                });
+                            }
+                        }
+                        // 显示错误消息
+                        Swal.fire({
+                            icon: 'error',
+                            title: '提交错误',
+                            html: `<ul>${errorMessage}</ul>`,
+                            confirmButtonText: '关闭'
+                        });
+                    } else {
+                        console.log('判断success')
+                        // 处理成功的情况
+                        Swal.fire({
+                            icon: 'success',
+                            title: '操作成功',
+                            text: '数据已成功提交！'
+                        }).then((result) => {
+                            if (result.value) {
+                                // 用户点击了“确定”，刷新父页面
+                                window.parent.location.reload();
+                            }
+                        });
+                    }
+                }).catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '网络错误',
+                        text: '无法连接到服务器，请稍后再试。',
+                        confirmButtonText: '关闭'
+                    });
+                });
+
+        });
+    });
+
+
+</script>

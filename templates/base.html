@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--父类模板-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑大校园管理系统</title>
+    <!--加载静态资源标签 下面就写成了动态的-->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/iconfont.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sweetalert2.css' %}">
+    <script src="{% static 'js/sweetalert2.js' %}"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="left">
+            <div class="head">
+                <a href="/students/">
+                    <h2>黑大学生管理系统</h2>
+                </a>
+            </div>
+            <div class="profile">
+                <!--login(request,user) 这里之所以可以用request 就是因为登录时其作为参数-->
+                欢迎 [ {{request.session.username}} ]
+                <!--这里注意==旁边一定要有空格 否则会报错-->
+                {% if request.session.user_role == 'admin' %}
+                管理员
+                {% elif request.session.user_role == 'student' %}
+                同学
+                {% else %}
+                老师
+                {% endif %}
+
+            </div>
+            <div class="content">
+                <ul>
+                    {% if request.session.user_role == 'admin' %}
+                    <li class="active"><span class="iconfont icon-fangzi"></span>
+                        <a href="/grades/" class="nav-link">班级管理</a>
+                    </li>
+                    <li class="active"><span class="iconfont icon-kapian"></span>
+                        <a href="/teachers/">老师管理</a>
+                    </li>
+                    {% endif %}
+                    {% if request.session.user_role == 'admin' or request.session.user_role == 'teacher' %}
+                    <li><span class="iconfont icon-ren"></span>
+                        <a href="/students/">学生管理</a>
+                    </li>
+                    <li><span class="iconfont icon-shuben"></span>
+                        <a href="/scores/">成绩管理</a>
+                    </li>
+                    {% endif %}
+
+                    {% if request.session.user_role == 'student' %}
+                    <li><span class="iconfont icon-bianji"></span>
+                        <a href="{% url 'my_scores' %}">成绩列表</a>
+                    </li>
+                    {% endif %}
+
+                    <li><span class="iconfont icon-bianji"></span>
+                        <a href="/change_password/">修改密码</a>
+                    </li>
+                    <li><span class="iconfont icon-shangchuan"></span>
+                        <a href="/logout/">退出登录</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!--下面为子模版内容-->
+        {% block content %}
+
+        {% endblock %}
+    </div>
+</body>
+
+</html>

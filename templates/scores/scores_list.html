@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load url_utils %}
+{% block content %}
+<div class=wrapper>
+    <div class=right>
+        <div class=top>
+            <div class=tool>
+                <div class=class-info>
+                    <form method="get" action="{% url 'score_list' %}" class=search-form>
+                        <span>班级:</span>
+                        <select name=grade>
+                            <option value="" selected>请选择班级</option>
+                            {% for grade in grades %}
+                            <option value="{{grade.pk}}">
+                                {{grade.grade_name}}
+                            </option>
+                            {% endfor %}
+
+                        </select>
+                        <span>姓名/学号:</span>
+                        <input type=text name=search value>
+                        <input type=submit value=搜索 id=search>
+                    </form>
+                </div>
+                <div class=actions>
+                    <button type=button class=add id=add>新增</button>
+                    <button type=button class=del id=bulkDel>批量删除</button>
+                    <button type=button class=import id=import>导入</button>
+                    <button type=button class=export id=export>导出</button>
+                </div>
+            </div>
+        </div>
+        <div class=bottom>
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type=checkbox id=select-all></th>
+                        <th>考试名称</th>
+                        <th>姓名</th>
+                        <th>班级</th>
+                        <th>学号</th>
+                        <th>语文</th>
+                        <th>数学</th>
+                        <th>英语</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in scores %}
+                    <tr>
+                        <td><input type=checkbox name=score_ids value={{score.pk}}></td>
+                        <td>{{score.title}}</td>
+                        <td>{{score.student_name}}</td>
+                        <td>{{score.grade}}</td>
+                        <td>{{score.student_number}}</td>
+                        <td>{{score.chinese_score}}</td>
+                        <td>{{score.math_score}}</td>
+                        <td>{{score.english_score}}</td>
+                        <td>
+                            <a href="{% url 'score_detail' score.pk %}" class=text-detail> 查看</a>
+                            <a href="{% url 'score_update' score.pk %}" class=edit>编辑</a>
+                            <a href="{% url 'score_delete' score.pk %}" class=btn-danger>删除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class=pagination>
+                <span class="step-links">
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                        <a href="?{% search_url request page=1 %}">&laquo; 首页</a>
+                        <a href="?{% search_url request page=page_obj.previous_page_number %} ">上一页</a>
+                        {% endif %}
+
+                        <span class="current">
+                            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                        </span>
+
+                        {% if page_obj.has_next %}
+                        <a href="?{% search_url request page=page_obj.next_page_number %}">下一页</a>
+                        <a href="?{% search_url request page=page_obj.paginator.num_pages %}">尾页 &raquo;</a>
+                        {% endif %}
+                    </span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <script>
+        //全选
+        document.addEventListener("DOMContentLoaded", function () {
+            //获取全选复选框元素
+            const selectedAllCheckbox = document.getElementById('select-all')
+            //监听全选复选框点击事件
+            selectedAllCheckbox.addEventListener('change', function () {
+                //获取所有表单为'score_ids'的复选框
+                const scroeCheckboxes = document.querySelectorAll('input[name="score_ids"]')
+                //根据全选复选框的选中状态来设置每个学生的复选框状态
+                scroeCheckboxes.forEach(function (checkbox) {
+                    checkbox.checked = selectedAllCheckbox.checked
+                })
+            })
+        })
+
+        //点击新增
+        document.getElementById('add').addEventListener('click', function () {
+            Swal.fire({
+                position: "top-end",
+                html: `<iframe src="{% url 'score_create' %}" width="100%", height="800px" frameborder="0" > <iframe>`,
+                width: 600,
+                showConfirmButton: false
+            });
+        })
+        //点击编辑
+        document.querySelectorAll('.edit').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault()
+                url = this.getAttribute('href')
+                Swal.fire({
+                    position: "top-end",
+                    html: `<iframe src="${url}" width="100%", height="800px" frameborder="0" > <iframe>`,
+                    width: 600,
+                    showConfirmButton: false
+                })
+            })
+        })
+        //点击删除
+        document.querySelectorAll('.btn-danger').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault()
+                url = this.getAttribute('href')
+                Swal.fire({
+                    title: "sure delete?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "删除",
+                    confirmButtonColor: "#d33",
+                }).then((result => {
+                    //判断是否按下删除按钮
+                    if (result.isConfirmed) {
+                        //向后台发送数据
+                        fetch(url, {
+                            method: "DELETE",
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest",
+                                "X-CSRFToken": "{{csrf_token}}",
+                            },
+                        })
+                            //后台响应
+                            .then(response => response.json())
+                            .then(data => {
+                                //删除成功则弹出删除成功提示
+                                if (data.status === 'success') {
+                                    Swal.fire("Deleted!", data.messages, "success")
+                                    //页面重新加载
+                                    window.location.reload()
+                                } else {
+                                    //弹出错误提示
+                                    Swal.fire('Error', data.messages, 'error')
+                                }
+                            })
+                    }
+                }))
+            })
+        })
+        //批量删除
+        document.getElementById('bulkDel').addEventListener('click', function () {
+            //是否有学生选中
+            const checkboxes = document.querySelectorAll('input[name="score_ids"]:checked')
+            //没有选中成绩
+            if (checkboxes.length === 0) {
+                //弹出提示
+                Swal.fire({
+                    title: "错误",
+                    text: "please check will be delete score!",
+                    icon: "error",
+                    confirmButtonText: "ok"
+                })
+                return
+            }
+            //选中则向后台发送fetch请求
+            Swal.fire({
+                title: "确认删除选中的数据",
+                icon: "warning",
+                confirmButtonText: "删除",
+                showCancelButton: true,
+                confirmButtonColor: "#d33"
+            })
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        //创建一个表单对象
+                        const formDate = new FormData()
+                        //遍历所有选中的数据，将选中的数据添加到formData
+                        checkboxes.forEach((checkbox) => {
+                            formDate.append('score_ids', checkbox.value)
+                        })
+                        fetch("{% url 'score_bulk_delete' %}", {
+                            method: "POST",
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest",
+                                "X-CSRFToken": "{{csrf_token}}",
+                            },
+                            body: formDate
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                //删除成功则弹出删除成功提示
+                                if (data.status === 'success') {
+                                    Swal.fire("Deleted!", data.messages, "success")
+                                    //页面重新加载
+                                    window.location.reload();
+                                } else {
+                                    //弹出错误提示
+                                    Swal.fire("Error", data.messages, 'error')
+                                }
+                            })
+                    }
+                })
+        })
+        //文件上传
+        document.getElementById('import').addEventListener('click', function () {
+            Swal.fire({
+                title: '上传学生信息Excel',
+                input: 'file',
+                inputAttributes: {
+                    'accept': '.xlsx',
+                    'aria-label': 'Please Upload your Excel file'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Upload',
+                showLoaderOnConfirm: true,
+                preConfirm: (file) => {
+                    // 处理文件上传的逻辑，例如使用 FormData 和 fetch API 上传文件
+                    const formData = new FormData();
+                    formData.append('excel_file', file);
+
+                    return fetch('{% url "upload_score" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': "{{ csrf_token }}" // 确保添加 CSRF 令牌
+                        },
+                        body: formData,
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'error') {
+                                throw new Error(data.messages); // 直接抛出错误，让 catch 块处理
+                            }
+                        })
+                        .catch(error => {
+                            console.log(error);
+                            Swal.showValidationMessage(`${error.messages || error}`);
+                        });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Uploaded!',
+                        text: '上传成功.'
+                    })
+                    window.location.reload();
+                }
+            });
+        })
+
+        //文件导出
+        document.getElementById('export').addEventListener('click', function () {
+            //检查是否选择了班级
+            var select = document.querySelector('select[name="grade"]')
+            //获取班级名称
+            var gradeText = select.options[select.selectedIndex].text;
+            var value = select.value
+            //判断班级的id是否存在（就是看是否选中了班级） 不存在则弹出提示
+            if (!value) {
+                Swal.fire({
+                    title: '错误！',
+                    text: '请选择一个班级',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                })
+                return;
+            }
+            //用户已经选中班级 则提交请求
+            // 提交请求
+            Swal.fire({
+                title: '确认',
+                text: '导出【' + gradeText + '】学生信息',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '确认',
+                cancelButtonText: '取消'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    //发送请求
+                    fetch('{% url "export_excel" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ grade: value })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                response.json().then(result => {
+                                    Swal.fire({
+                                        title: '下载失败',
+                                        text: '服务器错误：' + result.messages,
+                                        icon: 'error',
+                                        confirmButtonText: '关闭'
+                                    })
+                                })
+                                throw new Error('net error')
+                            }
+                            //返回一个二进制数据
+                            return response.blob();
+                        })
+                        .then(blob => {
+                            const url = window.URL.createObjectURL(blob)
+                            //创建一个a标签
+                            const a = document.createElement('a')
+                            a.style.display = 'none'
+                            a.href = url
+                            a.download = gradeText + '.xlsx'
+                            document.body.appendChild(a)
+                            a.click()
+                            //清理并移除元素
+                            document.body.removeChild(a)
+                            window.URL.revokeObjectURL(url)
+                        })
+                }
+            })
+        })
+    </script>
+    {% endblock %}

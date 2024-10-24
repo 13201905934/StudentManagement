@@ -1,0 +1,101 @@
+{% load static %}
+<script src="{% static 'js/sweetalert2.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/form.css' %}">
+<link rel="stylesheet" href="{% static 'css/sweetalert2.css' %}">
+<div class=container>
+    {% if teacher.pk %}
+    <h2>编辑老师信息</h2>
+    {% else %}
+    <h2>添加老师信息</h2>
+    {% endif %}
+    <form method=post>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <!--id_for_label 显示form中列出的字段-->
+            <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+            {{ field }}
+            {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="handleButton">
+            <button type="submit" id="saveButton">保存</button>
+            <button type="button" id="cancelButton" onclick="window.parent.Swal.close();">取消</button>
+        </div>
+    </form>
+</div>
+{% if teacher.pk %}
+<script>
+    var actionUrl = "{% url 'teacher_update' teacher.pk %}";
+</script>
+{% else %}
+<script>
+    var actionUrl = "{% url 'teacher_create' %}";
+</script>
+{% endif %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form')
+        const url = actionUrl
+        form.addEventListener('submit', function (e) {
+            e.preventDefault(); // 阻止表单默认提交
+            let formData = new FormData(form)
+            // 使用fetch发送请求
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": formData.get('csrfmiddlewaretoken'),
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        Swal.fire({
+                            icon: "success",
+                            title: data.messages,
+                            text: "successful"
+                        }).then((result) => {
+                            if (result.value) {
+                                //刷新父页面 回到student列表界面
+                                window.parent.location.reload()
+                            }
+                        })
+                    } else {
+                        //校验错误处理
+                        //1. 解析嵌套的json字符串
+                        const errors = JSON.parse(data.messages);
+                        //2. 构造错误信息提示文本
+                        let errorMessage = '';
+                        for (const field in errors) {
+                            if (errors.hasOwnProperty(field)) {
+                                errors[field].forEach(error => {
+                                    errorMessage += `<li style="color:red;text-align:left;margin-left: 100px;"> ${error.message} </li>`;
+                                });
+                            }
+                        }
+                        // 使用 SweetAlert2 显示错误信息
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'false',
+                            html: errorMessage,
+                            confirmButtonText: '关闭'
+                        });
+                    }
+                }).catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'net error',
+                        text: '无法连接到服务器，请稍后再试',
+                        confirmButtonText: '关闭'
+                    })
+                })
+        })
+
+
+    })
+
+
+</script>

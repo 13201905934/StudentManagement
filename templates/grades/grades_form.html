@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!--导入新增班级样式资源-->
+<link rel="stylesheet" href="{% static 'css/form.css' %}">
+
+<div class=bottom>
+    <div class=container>
+        <h1 style=text-align:center>
+            {% if object %}
+            编辑班级
+            {% else %}
+            新增班级
+            {% endif %}
+
+        </h1>
+        <form method=post>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class=form-group>
+                <label for='{{field.id_for_label}}'> {{field.label}}</label>
+                {{field}}
+                <!--重复添加错误提示-->
+                <ul class="errors">
+                    {% for error in field.errors %}
+                    <li>{{error}}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+
+            <div class=handleButton>
+                <button type=submit id=saveButton>保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

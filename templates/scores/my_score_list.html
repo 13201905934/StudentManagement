@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load url_utils %}
+{% block content %}
+<div class="right">
+    <h2 style="text-align: center; padding: 10px;">【{{request.user.student.student_name}}】同学，您的成绩列表！</h2>
+    <div class="bottom">
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>考试名称</th>
+                    <th>姓名</th>
+                    <th>班级</th>
+                    <th>学号</th>
+                    <th>语文</th>
+                    <th>数学</th>
+                    <th>英语</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for score in scores %}
+                <tr>
+                    <td><input type="checkbox" name="score_ids" value="{{score.id}}"></td>
+                    <td>{{score.title}}</td>
+                    <td>{{score.student_name}}</td>
+                    <td>{{score.grade.grade_name}}</td>
+                    <td>{{score.student_number}}</td>
+                    <td>{{score.chinese_score}}</td>
+                    <td>{{score.math_score}}</td>
+                    <td>{{score.english_score}}</td>
+                    <td>
+                        <a href="{% url 'score_detail' score.pk %}" class="text-detail"> 查看</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">暂无学生信息</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination">
+            <div>
+                <div>
+                    <span>第{{ page_obj.number }}页/共{{ page_obj.paginator.num_pages }}页</span>
+                    {% if page_obj.has_previous %}
+                    <a href="?{% search_url request page=1 %}">首页</a>
+                    <a href="?{% search_url request page=page_obj.previous_page_number %}">上一页</a>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                    <a href="?{% search_url request page=page_obj.next_page_number %}">下一页</a>
+                    <a href="?{% search_url request page=page_obj.paginator.num_pages %}">尾页</a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

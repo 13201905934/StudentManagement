@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑龙江大学</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper" style="background-image: url('{% static 'images/loginpage.jpg' %}');">
+        <div class="title">黑龙江大学<span>学生管理系统</span></div>
+        <div class="container">
+            <form action="#" method="post" id="loginForm">
+                <h2>登录</h2>
+                <div class="input-group">
+                    <label for="role">选择身份:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="admin" name="role" value="admin">
+                        <label for="admin">管理员</label>
+
+                        <input type="radio" id="teacher" name="role" value="teacher">
+                        <label for="teacher">老师</label>
+
+                        <input type="radio" id="student" name="role" value="student">
+                        <label for="student">学生</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="username">你的手机号:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">你的密码:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="input-group">
+                    <input type="checkbox" id="remember" name="remember" class="custom-checkbox">
+                    <label for="remember">记住我的密码</label>
+
+                </div>
+                <button type="button" onclick="submitLogin()">登 录</button>
+                <p class="forget">忘记密码了？请点击!!!</p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 定义一个函数来根据选中的单选按钮更新标签文本
+        function updateLabels() {
+            var selectedRoleRadio = document.querySelector('input[name="role"]:checked');
+            var usernameLabel = document.querySelector('label[for="username"]');
+            var passwordLabel = document.querySelector('label[for="password"]');
+
+            if (selectedRoleRadio) {
+                var selectedRole = selectedRoleRadio.value;
+                switch (selectedRole) {
+                    case 'admin':
+                        usernameLabel.textContent = '用户名:';
+                        passwordLabel.textContent = '密码:';
+                        break;
+                    case 'teacher':
+                        usernameLabel.textContent = '手机号:';
+                        passwordLabel.textContent = '密码:';
+                        break;
+                    case 'student':
+                        usernameLabel.textContent = '学籍号:';
+                        passwordLabel.textContent = '密码:';
+                        break;
+                }
+            } else {
+                // 当没有单选按钮被选中时，默认标签
+                usernameLabel.textContent = '你的账号:';
+                passwordLabel.textContent = '你的密码:';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // 获取所有相关的单选按钮
+            var radios = document.querySelectorAll('input[type="radio"][name="role"]');
+
+            // 为每个单选按钮添加事件监听器
+            radios.forEach(function (radio) {
+                radio.addEventListener('change', updateLabels);
+            });
+
+            // 初始调用一次，以适应初始选中状态（如果有）
+            updateLabels();
+        });
+
+        function showAlert(title, text) {
+            Swal.fire({
+                icon: 'error',
+                title: title,
+                text: text,
+            });
+        }
+
+        function validateForm() {
+            // 检查是否有任何单选按钮被选中
+            const selectedRadio = document.querySelector('input[name="role"]:checked');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!selectedRadio) {
+                showAlert('Oops...', '请先选择一个角色');
+                return false; // 阻止表单提交
+            }
+
+            if (!username.length) {
+                usernameLabel = document.querySelector('label[for="username"]').textContent.slice(0, -1);
+                showAlert('Oops...', usernameLabel + '不能为空');
+                return false;
+            }
+
+            if (password === '') {
+                showAlert('Oops...', '密码不能为空');
+                return false;
+            }
+            return true; // 显式返回 true 表示验证通过
+        }
+
+
+        function submitLogin() {
+            // 执行验证，如果未通过则停止执行
+            if (!validateForm()) return;
+            //提交表单
+            var csrftoken = '{{ csrf_token }}';
+            // 获取表单元素
+            var formElement = document.getElementById('loginForm');
+            // 创建FormData对象
+            var formData = new FormData(formElement);
+            formData.append('csrfmiddlewaretoken', csrftoken); // 添加CSRF token到表单数据
+
+            fetch('/login/', {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.messages)
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: "success",
+                            title: "登录成功",
+                            timer: 1500,
+                            didClose: () => {
+                                console.log(data.role)
+                                if (data.role === 'student') {
+                                    window.location.href = '{% url "my_scores" %}'
+                                } else {
+                                    //admin和teacher默认跳转到学生列表
+                                    window.location.href = "/"; // 替换成目标URL
+                                }
+                            }
+                        });
+                    } else {
+                        Swal.fire('Error', data.messages, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', '网络错误或服务器无响应。', 'error');
+                });
+
+        };
+
+    </script>
+
+
+</body>
+
+</html>

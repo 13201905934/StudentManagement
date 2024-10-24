@@ -1,0 +1,135 @@
+/* 版心 */
+.wrapper {
+    width: 1366px;
+    height: 768px;
+}
+
+.title {
+    float: left;
+    margin: 126px 235px;
+    font-size: 24px;
+    font-weight: normal;
+    color: #011a3a;
+}
+
+.title span {
+    margin-left: 10px;
+    color: #10c058;
+
+}
+
+.container {
+    float: right;
+    margin: 200px 194px 0 0;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+
+}
+
+.container h2 {
+    margin-top: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #182235;
+}
+
+.container p {
+    margin-top: 13px;
+    margin-bottom: 52px;
+    font-size: 14px;
+    color: #939393;
+}
+
+.container .input-group {
+    margin: 10px 0;
+
+}
+
+.container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #67788d;
+}
+
+.container input[type="text"],
+.container input[type="password"] {
+    width: 353px;
+    height: 38px;
+    border: solid 1px #b3b3b3;
+    border-radius: 5px;
+}
+
+.container input[type="text"]:hover,
+.container input[type="password"]:hover {
+    border: solid 1px #0dc05a;
+}
+
+
+
+.container label[for="remember"] {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 12px;
+    /* line-height: 12px; */
+    color: #67788d;
+}
+
+.container input[type="checkbox"]:checked+label[for="remember"] {
+    color: #0dc05a;
+
+}
+
+/* .container input[type="checkbox"]:checked {
+    color: #0dc05a;
+}
+
+.custom-checkbox {
+    color: green;
+} */
+
+
+
+
+
+
+.container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #1e201f;
+    border: none;
+    font-size: 18px;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.container button:hover {
+    background-color: #0dc05a;
+}
+
+.container .forget {
+    display: block;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: normal;
+    color: #1a1e25;
+
+}
+
+.container .forget:hover {
+    color: #0dc05a;
+}
+
+.radio-group {
+    display: flex;
+    align-items: center;
+}
+
+.radio-group input,
+.radio-group label {
+    margin: 0 10px;
+}
